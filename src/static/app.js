@@ -1,8 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   const activitiesList = document.getElementById("activities-list");
   const activitySelect = document.getElementById("activity");
+  const importActivitySelect = document.getElementById("import-activity");
   const signupForm = document.getElementById("signup-form");
+  const importForm = document.getElementById("import-form");
+  const importFileInput = document.getElementById("import-file");
   const messageDiv = document.getElementById("message");
+  const importMessageDiv = document.getElementById("import-message");
 
   // Function to fetch activities from API
   async function fetchActivities() {
@@ -12,6 +16,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Clear loading message
       activitiesList.innerHTML = "";
+      activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
+      importActivitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
@@ -54,6 +60,11 @@ document.addEventListener("DOMContentLoaded", () => {
         option.value = name;
         option.textContent = name;
         activitySelect.appendChild(option);
+
+        const importOption = document.createElement("option");
+        importOption.value = name;
+        importOption.textContent = name;
+        importActivitySelect.appendChild(importOption);
       });
 
       // Add event listeners to delete buttons
@@ -153,6 +164,66 @@ document.addEventListener("DOMContentLoaded", () => {
       messageDiv.classList.remove("hidden");
       console.error("Error signing up:", error);
     }
+  });
+
+  // Handle import form submission
+  importForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const activity = importActivitySelect.value;
+    const file = importFileInput.files[0];
+
+    if (!activity || !file) {
+      importMessageDiv.textContent = "Please select an activity and upload an Excel file.";
+      importMessageDiv.className = "message error";
+      importMessageDiv.classList.remove("hidden");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch(
+        `/activities/${encodeURIComponent(activity)}/import`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        let details = result.message;
+        if (result.added && result.added.length > 0) {
+          details += ` Added: ${result.added.length}.`;
+        }
+        if (result.skipped && result.skipped.length > 0) {
+          details += ` Skipped: ${result.skipped.length}.`;
+        }
+        if (result.invalid && result.invalid.length > 0) {
+          details += ` Invalid: ${result.invalid.length}.`;
+        }
+
+        importMessageDiv.textContent = details;
+        importMessageDiv.className = "message success";
+        importForm.reset();
+        fetchActivities();
+      } else {
+        importMessageDiv.textContent = result.detail || "An error occurred while importing.";
+        importMessageDiv.className = "message error";
+      }
+    } catch (error) {
+      importMessageDiv.textContent = "Failed to import attendance. Please try again.";
+      importMessageDiv.className = "message error";
+      console.error("Error importing attendance:", error);
+    }
+
+    importMessageDiv.classList.remove("hidden");
+    setTimeout(() => {
+      importMessageDiv.classList.add("hidden");
+    }, 7000);
   });
 
   // Initialize app

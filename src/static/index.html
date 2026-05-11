@@ -39,6 +39,27 @@
         </form>
         <div id="message" class="hidden"></div>
       </section>
+
+      <section id="import-container">
+        <h3>Import Attendance from Excel</h3>
+        <form id="import-form" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="import-activity">Select Activity:</label>
+            <select id="import-activity" required>
+              <option value="">-- Select an activity --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="import-file">Upload Excel file (.xlsx):</label>
+            <input type="file" id="import-file" accept=".xlsx" required />
+          </div>
+          <button type="submit">Import Attendance</button>
+        </form>
+        <div id="import-message" class="hidden"></div>
+        <p class="import-hint">
+          Use a spreadsheet with a column named <strong>Email</strong>, or place one email per row in the first column.
+        </p>
+      </section>
     </main>
 
     <footer>
